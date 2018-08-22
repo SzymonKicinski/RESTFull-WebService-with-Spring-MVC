@@ -10,6 +10,9 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Created by jt on 9/27/17.
+ */
 @Service
 public class CustomerServiceImpl implements CustomerService {
 
@@ -40,14 +43,20 @@ public class CustomerServiceImpl implements CustomerService {
         return customerRepository.findById(id)
                 .map(customerMapper::customerToCustomerDTO)
                 .map(customerDTO -> {
-                    // Set API URL
+                    //set API URL
                     customerDTO.setCustomerUrl(getCustomerUrl(id));
                     return customerDTO;
                 })
                 .orElseThrow(ResourceNotFoundException::new);
     }
 
-    // $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+    @Override
+    public CustomerDTO getCustomerByFirstname(String firstname) {
+        return customerMapper.customerToCustomerDTO(customerRepository.findByFirstname(firstname));
+    }
+
+
+    // CREATE NEW CUSTOMER
     @Override
     public CustomerDTO createNewCustomer(CustomerDTO customerDTO) {
         return saveAndReturnDTO(customerMapper.customerDtoToCustomer(customerDTO));
@@ -64,6 +73,7 @@ public class CustomerServiceImpl implements CustomerService {
         return returnDto;
     }
 
+    // UPDATE
     @Override
     public CustomerDTO saveCustomerByDTO(Long id, CustomerDTO customerDTO) {
         Customer customer = customerMapper.customerDtoToCustomer(customerDTO);
@@ -75,30 +85,22 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public CustomerDTO patchCustomer(Long id, CustomerDTO customerDTO) {
         return customerRepository.findById(id).map(customer -> {
+
             if (customerDTO.getFirstname() != null) {
                 customer.setFirstname(customerDTO.getFirstname());
             }
+
             if (customerDTO.getLastname() != null) {
                 customer.setLastname(customerDTO.getLastname());
             }
 
-            CustomerDTO returnDTO = customerMapper.customerToCustomerDTO(customerRepository.save(customer));
+            CustomerDTO returnDto = customerMapper.customerToCustomerDTO(customerRepository.save(customer));
 
-            returnDTO.setCustomerUrl(getCustomerUrl(id));
+            returnDto.setCustomerUrl(getCustomerUrl(id));
 
-            return returnDTO;
+            return returnDto;
+
         }).orElseThrow(ResourceNotFoundException::new);
-    }
-
-
-    @Override
-    public CustomerDTO getCustomerByFirstname(String firstname) {
-        return customerMapper.customerToCustomerDTO(customerRepository.findByFirstname(firstname));
-    }
-
-    @Override
-    public CustomerDTO getCustomerByLastname(String lastname) {
-        return customerMapper.customerToCustomerDTO(customerRepository.findByLastname(lastname));
     }
 
     private String getCustomerUrl(Long id) {
@@ -109,4 +111,5 @@ public class CustomerServiceImpl implements CustomerService {
     public void deleteCustomerById(Long id) {
         customerRepository.deleteById(id);
     }
+
 }
